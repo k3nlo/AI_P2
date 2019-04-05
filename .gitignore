@@ -1,4 +1,4 @@
-./test/*
+./test/*.
 ./train/*
 ./zip/*
 English-Stop-Words.txt
