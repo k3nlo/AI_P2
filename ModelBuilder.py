@@ -1,41 +1,43 @@
 # authorized libraries: NumPy, math, re, sys, Matplotlib.
-
 # read all text files and build  vocabulary
-
-
-
-
 import os, re
 
-class Builder:
+class ModelBuilder:
 
-# ctor
-
+    # ctor
     def __init__(self, directory_str):
         self.directory_str = directory_str
 
         self.ham_file_count = 0
         self.ham_word_count = 0
         self.ham_dictionary = dict()
+        self.ham_prior = 0
 
         self.spam_file_count = 0
         self.spam_word_count = 0
         self.spam_dictionary = dict()
+        self.spam_prior = 0
 
         self.vocabulary = dict()
         self.vocabulary_size = 0
         self.file_count = 0
         self.word_count = 0
 
-# getters
+    # getters
 
     def get_ham_dictionary(self):
         return self.ham_dictionary
 
+    def get_ham_file_count(self):
+        return self.ham_file_count
+
+    def get_spam_file_count(self):
+        return self.spam_file_count
+
     def get_spam_dictionary(self):
         return self.spam_dictionary
 
-
+    # methods
     def extractWords(self):
         directory = os.fsencode(self.directory_str)
         for file in os.listdir(directory):
@@ -96,6 +98,7 @@ class Builder:
             print('spam_file_count:', self.spam_file_count)
             print('spam_word_count:', self.spam_word_count)
 
+
     def buildVocabulary(self):
         for word in self.ham_dictionary:
             # add every new word form ham
@@ -111,6 +114,10 @@ class Builder:
         self.file_count = self.ham_file_count + self.spam_file_count
         self.word_count = self.ham_word_count + self.spam_word_count
         self.vocabulary_size = len(self.vocabulary)
+        # calculating priors
+        self.ham_prior = self.ham_file_count/self.file_count
+        self.spam_prior = self.spam_file_count/self.file_count
+
 
     def printVocabulary(self):
         i = 0
@@ -126,7 +133,7 @@ class Builder:
         print('word_count:', self.word_count)
 
 
-    def calculateSmoothedProbability(self, delta):
+    def smoothProbability(self, delta):
         smoothed_ham_word_count = self.ham_word_count + delta*self.vocabulary_size
         smoothed_spam_word_count = self.spam_word_count + delta*self.vocabulary_size
 
@@ -134,7 +141,8 @@ class Builder:
             self.vocabulary.get(word)[1] = (self.vocabulary.get(word)[0]+delta)/ smoothed_ham_word_count
             self.vocabulary.get(word)[3] = (self.vocabulary.get(word)[2]+delta) / smoothed_spam_word_count
 
-    def outputFile(self, fileName):
+
+    def outputModelFile(self, fileName):
         file = open(fileName, 'w+')
         line_counter=0
         for key, value in sorted(self.vocabulary.items()):  # check the first 10 words
@@ -146,29 +154,64 @@ class Builder:
 
         file.close()
 
+    def testModel(self, directory_str):
+        directory = os.fsencode(directory_str)
+        for file in os.listdir(directory):
+            new_document = os.fsdecode(file)
+            if new_document.endswith('.txt'):  # just .txt for all files, isolated the 1st one for testing
+                if 'ham' in new_document:
+                    # calculate both score
+                    score_ham = self.ham_prior
+                    score_spam = self.spam_prior
+
+                elif 'spam' in new_document:
+                    # calculate both score
+                    score_ham = self.ham_prior
+                    score_spam = self.spam_prior
+
+
+
+
 
 # output to model.txt in alphabetical order
 # lineCount  word  frequencyInHam  smoothedProbHam  frequencyInSpam  smoothedProbSpam returnChar
 # @staticmethod
 def main():
     folder_str = 'train'
-    model_builder = Builder(folder_str)
-    model_builder.extractWords()
+    model = ModelBuilder(folder_str)
+    model.extractWords()
     # ham_dict = word_reader.get_ham_dictionary()
     # spam_dict = word_reader.get_spam_dictionary()
-    model_builder.printCategoryInfo('ham')
+    model.printCategoryInfo('ham')
     # word_reader.printDictionary(ham_dict)
-    model_builder.printCategoryInfo('spam')
+    model.printCategoryInfo('spam')
     # word_reader.printDictionary(spam_dict)
-    model_builder.buildVocabulary()
-    model_builder.printVocabularyInfo()
+    model.buildVocabulary()
+    model.printVocabularyInfo()
     # word_reader.printVocabulary()
     # 0.5 smoothing for conditional probability
     delta = 0.5
-    model_builder.calculateSmoothedProbability(delta)
+    model.smoothProbability(delta)
     print('VOCABULARY = ')
-    model_builder.printVocabulary()
-    model_builder.outputFile('model.txt')
+    model.printVocabulary()
+    # rename output to the desired name
+    model.outputModelFile('model.txt')
+    # model.outputModelFile('demo-model-base.txt')
+
+    # Task2 test the model
+    # // 2.testing a new document D
+    # for each document in the train folder
+    folder_str = 'test'
+    model.testModel(folder_str)
+
+
+
+    # for all classes ci // ex.ham or spam
+    # score(ci) = P(ci)
+    # for all words wj in the D
+    # score(ci) = score(ci)
+    # x P(wj | ci)
+    # choose c * = with the greatest score(ci)
 
 #run the main method
 main()
