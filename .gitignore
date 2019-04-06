@@ -1,4 +1,5 @@
-./test/*.
-./train/*
-./zip/*
+./test/*.txt
+./train/*.txt
+./zip/*.zip
 English-Stop-Words.txt
+*.txt

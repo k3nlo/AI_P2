@@ -7,7 +7,7 @@
 
 import os, re
 
-class Reader:
+class Builder:
 
 # ctor
 
@@ -131,48 +131,45 @@ class Reader:
         smoothed_spam_word_count = self.spam_word_count + delta*self.vocabulary_size
 
         for word in self.vocabulary:
-            self.vocabulary.get(word)[0] += delta
-            self.vocabulary.get(word)[1] = self.vocabulary.get(word)[0] / smoothed_ham_word_count
-            self.vocabulary.get(word)[2] += delta
-            self.vocabulary.get(word)[3] = self.vocabulary.get(word)[0] / smoothed_spam_word_count
+            self.vocabulary.get(word)[1] = (self.vocabulary.get(word)[0]+delta)/ smoothed_ham_word_count
+            self.vocabulary.get(word)[3] = (self.vocabulary.get(word)[2]+delta) / smoothed_spam_word_count
 
+    def outputFile(self, fileName):
+        file = open(fileName, 'w+')
+        line_counter=0
+        for key, value in sorted(self.vocabulary.items()):  # check the first 10 words
+            line_counter += 1
+            line_str = str(line_counter) + '  ' + key + '  ' + str(value[0]) + '  ' \
+                       + str(value[1]) + '  ' + str(value[2]) + '  ' + str(value[3]) + '\r'
+            file.write(line_str)
+            # print(key, ':', value)
 
-# each word frequencies
+        file.close()
 
-# each word probability per class
-
-# vocabulary = set of all words
-
-# for each word: save frequency, conditional class/probability
-
-# smooth with delta = 0.5
 
 # output to model.txt in alphabetical order
 # lineCount  word  frequencyInHam  smoothedProbHam  frequencyInSpam  smoothedProbSpam returnChar
 # @staticmethod
 def main():
     folder_str = 'train'
-    word_reader = Reader(folder_str)
-    word_reader.extractWords()
-
-    ham_dict = word_reader.get_ham_dictionary()
-    spam_dict = word_reader.get_spam_dictionary()
-
-    word_reader.printCategoryInfo('ham')
+    model_builder = Builder(folder_str)
+    model_builder.extractWords()
+    # ham_dict = word_reader.get_ham_dictionary()
+    # spam_dict = word_reader.get_spam_dictionary()
+    model_builder.printCategoryInfo('ham')
     # word_reader.printDictionary(ham_dict)
-    word_reader.printCategoryInfo('spam')
+    model_builder.printCategoryInfo('spam')
     # word_reader.printDictionary(spam_dict)
-    word_reader.buildVocabulary()
-    word_reader.printVocabularyInfo()
-    word_reader.printVocabulary()
-    delta = 0.5
-    word_reader.calculateSmoothedProbability(delta)
-    print('after smoothing = ')
-    word_reader.printVocabulary()
-
+    model_builder.buildVocabulary()
+    model_builder.printVocabularyInfo()
+    # word_reader.printVocabulary()
     # 0.5 smoothing for conditional probability
+    delta = 0.5
+    model_builder.calculateSmoothedProbability(delta)
+    print('VOCABULARY = ')
+    model_builder.printVocabulary()
+    model_builder.outputFile('model.txt')
 
-
-
+#run the main method
 main()
 
