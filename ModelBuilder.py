@@ -2,6 +2,8 @@
 # read all text files and build  vocabulary
 import copy
 import os, re, math, operator
+# todo: uncomment ploting in spyder 3
+
 import matplotlib.pyplot as plt
 
 
@@ -270,6 +272,7 @@ class ModelBuilder:
 
 
     def smoothProbability(self, delta):
+
         smoothed_ham_word_count = self.ham_word_count + delta*self.vocabulary_size
         smoothed_spam_word_count = self.spam_word_count + delta*self.vocabulary_size
 
@@ -278,8 +281,10 @@ class ModelBuilder:
             self.vocabulary.get(word)[3] = (self.vocabulary.get(word)[2]+delta) / smoothed_spam_word_count
 
 
-    def outputModelFile(self, fileName):
-        file = open(fileName, 'w+', encoding=self.char_encoding)
+    def outputModelFile(self, folder, fileName):
+
+        new_doc_path = os.path.join(folder, fileName)
+        file = open(new_doc_path, 'w+', encoding=self.char_encoding)
         line_counter=0
         for key, value in sorted(self.vocabulary.items()):  # check the first 10 words
             line_counter += 1
@@ -345,9 +350,10 @@ class ModelBuilder:
             self.test_results.append(str(file_result_str))
 
 
-    def outputTestFile(self, fileName):
+    def outputTestFile(self, folder, fileName):
         print('Outputting the test results to a .txt file.')
-        file = open(fileName, 'w+', encoding=self.char_encoding)
+        new_doc_path = os.path.join(folder, fileName)
+        file = open(new_doc_path, 'w+', encoding=self.char_encoding)
         for result_str in self.test_results:  # check the first 10 words
             line_str = result_str + '\r'
             file.write(line_str)
@@ -365,7 +371,7 @@ class ModelBuilder:
                 stop_word = line.lower().rstrip()
                 self.stop_words_set.add(stop_word)
         self.stop_words_set.remove('')
-        print('set of stop word: ',self.stop_words_set)
+        # print('set of stop word: ',self.stop_words_set)
 
 
     def remove_less_freq_wrd(self, freq_int):
@@ -434,9 +440,10 @@ class ModelBuilder:
         self.word_count = self.ham_word_count + self.spam_word_count
 
 
-    def calculateAccuracy(self, result_txt_str):
+    def calculateAccuracy(self, folder, result_txt_str):
         # print(result_txt_str)
-        filename = os.fsdecode(result_txt_str)
+        file_path = os.path.join(folder, result_txt_str)
+        filename = os.fsdecode(file_path)
 
         test_file = open(filename, 'r', encoding=self.char_encoding)
         count_row = 0
@@ -467,6 +474,15 @@ def base_experiment():
     #
     # TASK 1 AND 2: BASE EXPERIMENT
     #
+    dirName = 'base'
+
+    try:
+        # Create target Directory
+        os.mkdir(dirName)
+        print("Directory ", dirName, " Created ")
+    except FileExistsError:
+        print("Directory ", dirName, " already exists")
+
     print(separator)
     print('BASE MODEL:')
     print(separator)
@@ -479,13 +495,13 @@ def base_experiment():
     model.smoothProbability(delta)
     # print('BASE MODEL SAMPLE = ')
     # model.printVocabulary(10)
-    model.outputModelFile('baseline-model.txt')
+    model.outputModelFile(dirName, 'baseline-model.txt')
     # switch output for demo
-    # model.outputModelFile('demo-model-base.txt')
+    # model.outputModelFile(dirName, 'demo-model-base.txt')
     # Task2 test the model
     model.testModel(test_folder_str)
-    model.outputTestFile('baseline-result.txt')
-    # model.outputTestFile('demo-result-base.txt')
+    model.outputTestFile(dirName, 'baseline-result.txt')
+    # model.outputTestFile(dirName, 'demo-result-base.txt')
 
 
 def experiment_2():
@@ -496,8 +512,17 @@ def experiment_2():
     #
     # TASK 3 EXPERIMENT 2: STOP WORDS
     #
+    dirName = 'exp_2'
+
+    try:
+        # Create target Directory
+        os.mkdir(dirName)
+        print("Directory ", dirName, " Created ")
+    except FileExistsError:
+        print("Directory ", dirName, " already exists")
+
     print(separator)
-    print('sTOP MODEL:')
+    print('STOP WORDS MODEL:')
     print(separator)
     stop_model = ModelBuilder(train_folder_str)
     stop_words_str = 'English-Stop-Words.txt'
@@ -510,11 +535,11 @@ def experiment_2():
     stop_model.smoothProbability(delta)
     # print('STOP MODEL SAMPLE= ')
     # stop_model.printVocabulary(10)
-    stop_model.outputModelFile('stopword-model.txt')
-    # model.outputModelFile('demo-model-exp2.txt')
+    stop_model.outputModelFile(dirName, 'stopword-model.txt')
+    # stop_model.outputModelFile(dirName, 'demo-model-exp2.txt')
     stop_model.testModel(test_folder_str)
-    stop_model.outputTestFile('stopword-result.txt')
-    # stop_model.outputTestFile('demo-result-exp2.txt')
+    stop_model.outputTestFile(dirName,'stopword-result.txt')
+    # stop_model.outputTestFile(dirName, 'demo-result-exp2.txt')
 
 
 def experiment_3():
@@ -525,6 +550,16 @@ def experiment_3():
     #
     # TASK 3 EXPERIMENT 3: WORD LENGTH
     #
+    dirName = 'exp_3'
+
+    try:
+        # Create target Directory
+        os.mkdir(dirName)
+        print("Directory ", dirName, " Created ")
+    except FileExistsError:
+        print("Directory ", dirName, " already exists")
+
+
     print(separator)
     print('WORD LENGTH MODEL:')
     print(separator)
@@ -539,11 +574,11 @@ def experiment_3():
     word_length_model.smoothProbability(delta)
     # print('WORD LENGTH MODEL SAMPLE= ')
     # word_length_model.printVocabulary(10)
-    word_length_model.outputModelFile('wordlength-model.txt')
-    # model.outputModelFile('demo-model-exp3.txt')
+    word_length_model.outputModelFile(dirName, 'wordlength-model.txt')
+    # word_length_model.outputModelFile(dirName, 'demo-model-exp3.txt')
     word_length_model.testModel(test_folder_str)
-    word_length_model.outputTestFile('wordlength-result.txt')
-    # word_length_model.outputTestFile('demo-result-exp2.txt')
+    word_length_model.outputTestFile(dirName,'wordlength-result.txt')
+    # word_length_model.outputTestFile(dirName, 'demo-result-exp3.txt')
 
 
 def experiment_4():
@@ -558,6 +593,16 @@ def experiment_4():
     #
     # TASK 3 EXPERIMENT 4: WORD FREQUENCY
     #
+    dirName = 'exp_4'
+
+    try:
+        # Create target Directory
+        os.mkdir(dirName)
+        print("Directory ", dirName, " Created ")
+    except FileExistsError:
+        print("Directory ", dirName, " already exists")
+
+
     print(separator)
     print('WORD FREQUENCY INITIAL MODEL B:')
     print(separator)
@@ -573,16 +618,16 @@ def experiment_4():
     word_frequency_model.smoothProbability(delta)
     x=0
     model_str = 'word-frequency-model-B' + str(x) + '.txt'
-    word_frequency_model.outputModelFile(model_str)
+    word_frequency_model.outputModelFile(dirName, model_str)
     # # model.outputModelFile('demo-model-exp3.txt')
     word_frequency_model.testModel(test_folder_str)
     result_str = 'word-frequency-result-B' + str(x) + '.txt'
-    word_frequency_model.outputTestFile(result_str)
+    word_frequency_model.outputTestFile(dirName, result_str)
 
     model_name = 'b'+str(x)
     vocab_size = word_frequency_model.get_vocabulary_size()
     # evaluate accuracy
-    accuracy = word_frequency_model.calculateAccuracy(result_str)
+    accuracy = word_frequency_model.calculateAccuracy(dirName, result_str)
     data_point = [vocab_size, accuracy]
     print('accuracy = ', accuracy)
     frequency_chart_data[model_name] = data_point
@@ -606,16 +651,18 @@ def experiment_4():
         word_frequency_model.printCategoryInfo('spam')
         word_frequency_model.printVocabularyInfo()
         model_str = 'word-frequency-model-L' + str(x) + '.txt'
-        word_frequency_model.outputModelFile(model_str)
-        # # model.outputModelFile('demo-model-exp3.txt')
+        word_frequency_model.outputModelFile(dirName, model_str)
+        # word_frequency_model.outputModelFile(dirName, 'demo-model-exp4.txt')
         word_frequency_model.testModel(test_folder_str)
         result_str = 'word-frequency-result-L' + str(x) + '.txt'
-        word_frequency_model.outputTestFile(result_str)
+        word_frequency_model.outputTestFile(dirName, result_str)
+        # word_frequency_model.outputTestFile(dirName, 'demo-result-exp4.txt')
+
 
         model_name = 'L' + str(x)
         vocab_size = word_frequency_model.get_vocabulary_size()
         # evaluate accuracy
-        accuracy = word_frequency_model.calculateAccuracy(result_str)
+        accuracy = word_frequency_model.calculateAccuracy(dirName, result_str)
         data_point = [vocab_size, accuracy]
         print('accuracy = ', accuracy)
         frequency_chart_data[model_name] = data_point
@@ -634,16 +681,18 @@ def experiment_4():
         word_frequency_model.printCategoryInfo('spam')
         word_frequency_model.printVocabularyInfo()
         model_str = 'word-frequency-model-M' + str(x) + '.txt'
-        word_frequency_model.outputModelFile(model_str)
-        # # model.outputModelFile('demo-model-exp3.txt')
+        word_frequency_model.outputModelFile(dirName, model_str)
+        # word_frequency_model.outputModelFile(dirName, 'demo-model-exp4.txt')
         word_frequency_model.testModel(test_folder_str)
         result_str = 'word-frequency-result-M' + str(x) + '.txt'
-        word_frequency_model.outputTestFile(result_str)
+        word_frequency_model.outputTestFile(dirName, result_str)
+        # word_frequency_model.outputTestFile(dirName, 'demo-result-exp4.txt')
+
 
         model_name = 'M' + str(x)
         vocab_size = word_frequency_model.get_vocabulary_size()
         # evaluate accuracy
-        accuracy = word_frequency_model.calculateAccuracy(result_str)
+        accuracy = word_frequency_model.calculateAccuracy(dirName, result_str)
         data_point = [vocab_size, accuracy]
         print('accuracy = ', accuracy)
         frequency_chart_data[model_name] = data_point
@@ -652,36 +701,102 @@ def experiment_4():
     x_data=[]
     y_data=[]
     #plot data on a chart
-    for model in frequency_chart_data:
-        x_data.append(model[0]) #vocab size
-        y_data.append(model[1]) #accuracy
+    for model, value in frequency_chart_data.items():
+        x_data.append(value[0]) #vocab size
+        y_data.append(value[1]) #accuracy
 
-
-
-
+    # todo: uncomment ploting in spyder 3
     plt.plot(x_data, y_data)
     plt.ylabel('Classifier Accuracy')
     plt.xlabel('Vocabulary Size')
     plt.show()
 
-    # import matplotlib.pyplot as plt
-    # plt.plot([1, 2, 3, 4], [1, 4, 9, 16], 'ro')
-    # # start x end x, star y end y
-    # plt.axis([0, 6, 0, 20])
-    # plt.show()
+
+def experiment_5():
+    #CHANGE THE DELTA VALUE FROM 0 TO 1 IN 0.1 INCREMENTS
+    separator = ('=' * 50) + '\r'
+    delta = 0
+    train_folder_str = 'train'
+    test_folder_str = 'test'
+
+    # for each key = model, store value (list) vocab size, accuracy
+    delta_chart_data = dict()
+
+    for j in range(0, 10, 1):
+        # print(x)
+        delta += 0.1
+        delta = round(delta, 1)
+        # print(delta)
+
+        dirName = 'exp_5'
+
+        try:
+            # Create target Directory
+            os.mkdir(dirName)
+            print("Directory ", dirName, " Created ")
+        except FileExistsError:
+            print("Directory ", dirName, " already exists")
+
+        print(separator)
+        print('MODEL WITH DELTA = ', delta)
+        print(separator)
+        delta_variation_model = ModelBuilder(train_folder_str)
+
+        delta_variation_model.extractWords()
+
+        delta_variation_model.printCategoryInfo('ham')
+        delta_variation_model.printCategoryInfo('spam')
+
+        delta_variation_model.buildVocabulary()
+        delta_variation_model.printVocabularyInfo()
+        # word_frequency_model.printVocabulary(20)
 
 
+        delta_variation_model.smoothProbability(delta)
+
+        model_str = 'delta-variation-model-D' + str(delta) + '.txt'
+        delta_variation_model.outputModelFile(dirName, model_str)
+        # delta_variation_model.outputModelFile(dirName, 'demo-model-exp5.txt')
+        delta_variation_model.testModel(test_folder_str)
+        result_str = 'delta-variation-result-D' + str(delta) + '.txt'
+        delta_variation_model.outputTestFile(dirName, result_str)
+        # delta_variation_model.outputTestFile(dirName, 'demo-result-exp5.txt')
+
+
+        model_name = 'D' + str(delta)
+        # evaluate accuracy
+        accuracy = delta_variation_model.calculateAccuracy(dirName, result_str)
+        data_point = [delta, accuracy]
+        print('accuracy = ', accuracy)
+        delta_chart_data[model_name] = data_point
+
+
+
+    x_data = []
+    y_data = []
+    # plot data on a chart
+    for model, value in delta_chart_data.items():
+        x_data.append(value[0])  # delta
+        y_data.append(value[1])  # accuracy
+
+    # todo: uncomment ploting in spyder 3
+    plt.plot(x_data, y_data)
+    plt.ylabel('Classifier Accuracy')
+    plt.xlabel('Delta Value')
+    plt.show()
 
 
 def main():
 
-    # base_experiment()
-    #
-    # experiment_2()
-    #
-    # experiment_3()
+    base_experiment()
+    
+    experiment_2()
+    
+    experiment_3()
 
     experiment_4()
+
+    experiment_5()
 
 
 
