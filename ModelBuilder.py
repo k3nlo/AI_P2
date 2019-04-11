@@ -33,6 +33,8 @@ class ModelBuilder:
 
         self.test_results = []
         self.stop_words_set = set()
+
+        self.classes = ['ham', 'spam']
         # self.stop_vocabulary = {}
 
     # getters
@@ -447,7 +449,7 @@ class ModelBuilder:
 
         test_file = open(filename, 'r', encoding=self.char_encoding)
         count_row = 0
-        count_right = 0
+        count_A = 0 #right classification
         for line in test_file:
             count_row += 1
             line = line.lower().rstrip()
@@ -455,11 +457,61 @@ class ModelBuilder:
             # print(line_arr)
             result = line_arr[6]#end of the line where the result is stored
             if result == 'right':
-                count_right+=1
+                count_A+=1
 
-        accuracy = (count_right/count_row)*100
+        accuracy = (count_A/count_row)*100
 
         return accuracy
+
+
+    def precision_recall(self, folder, result_txt_str, class_eval, opp_class):
+        # print(result_txt_str)
+        file_path = os.path.join(folder, result_txt_str)
+        filename = os.fsdecode(file_path)
+
+        test_file = open(filename, 'r', encoding=self.char_encoding)
+        count_row = 0
+        count_A = 0  # right classification
+        count_B = 0  # classified as spam but ham
+        count_C = 0
+        count_D = 0
+
+        for line in test_file:
+            count_row += 1
+            line = line.lower().rstrip()
+            line_arr = line.split('  ')
+            # print(line_arr)
+            classified_as = line_arr[2]
+            actual_class = line_arr[5]
+            result = line_arr[6]
+
+             # end of the line where the result is stored
+            if classified_as == class_eval and actual_class == class_eval and result == 'right':
+                count_A += 1
+
+            if classified_as == class_eval and actual_class == opp_class and result == 'wrong':
+                count_B += 1
+
+            if classified_as == opp_class and actual_class == class_eval and result == 'wrong':
+                count_C += 1
+
+            if classified_as == opp_class and actual_class == opp_class and result == 'right':
+                count_D += 1
+
+        print(class_eval, 'count A =', count_A, 'count B = ',count_B, 'count C =',count_C, 'count D =',count_D)
+
+        precision = (count_A / (count_A+count_B)) * 100
+        recall = (count_A / (count_A + count_C)) * 100
+
+
+        return precision, recall
+
+    # beta represents the relative importance of precision and recall when 1 both are equal
+    def f_measure(self, precision, recall, beta):
+        f_measure = ((pow(beta,2)+1)*precision*recall)/((pow(beta,2)*precision)+recall)
+        return  f_measure
+
+    
 
 
 # output to model.txt in alphabetical order
@@ -500,8 +552,22 @@ def base_experiment():
     # model.outputModelFile(dirName, 'demo-model-base.txt')
     # Task2 test the model
     model.testModel(test_folder_str)
-    model.outputTestFile(dirName, 'baseline-result.txt')
+    result_str = 'baseline-result.txt'
+    model.outputTestFile(dirName, result_str)
     # model.outputTestFile(dirName, 'demo-result-base.txt')
+    # evaluate accuracy
+    accuracy = model.calculateAccuracy(dirName, result_str)
+    print('accuracy =', accuracy)
+    for eval_class in model.classes:
+        if eval_class == 'ham':
+            opp_class = 'spam'
+        else:
+            opp_class = 'ham'
+        precision, recall = model.precision_recall(dirName, result_str, eval_class, opp_class)
+        print(eval_class,'precision =', precision, 'recall = ', recall)
+        beta = 1
+        f1_measure = model.f_measure(precision, recall, beta)
+        print(eval_class, 'f1_measure =', f1_measure)
 
 
 def experiment_2():
@@ -538,8 +604,21 @@ def experiment_2():
     stop_model.outputModelFile(dirName, 'stopword-model.txt')
     # stop_model.outputModelFile(dirName, 'demo-model-exp2.txt')
     stop_model.testModel(test_folder_str)
-    stop_model.outputTestFile(dirName,'stopword-result.txt')
+    result_str = 'stopword-result.txt'
+    stop_model.outputTestFile(dirName, result_str)
     # stop_model.outputTestFile(dirName, 'demo-result-exp2.txt')
+    accuracy = stop_model.calculateAccuracy(dirName, result_str)
+    print('accuracy =', accuracy)
+    for eval_class in stop_model.classes:
+        if eval_class == 'ham':
+            opp_class = 'spam'
+        else:
+            opp_class = 'ham'
+        precision, recall = stop_model.precision_recall(dirName, result_str, eval_class, opp_class)
+        print(eval_class, 'precision =', precision, 'recall = ', recall)
+        beta = 1
+        f1_measure = stop_model.f_measure(precision, recall, beta)
+        print(eval_class, 'f1_measure =', f1_measure)
 
 
 def experiment_3():
@@ -577,8 +656,21 @@ def experiment_3():
     word_length_model.outputModelFile(dirName, 'wordlength-model.txt')
     # word_length_model.outputModelFile(dirName, 'demo-model-exp3.txt')
     word_length_model.testModel(test_folder_str)
-    word_length_model.outputTestFile(dirName,'wordlength-result.txt')
+    result_str = 'wordlength-result.txt'
+    word_length_model.outputTestFile(dirName,result_str)
     # word_length_model.outputTestFile(dirName, 'demo-result-exp3.txt')
+    accuracy = word_length_model.calculateAccuracy(dirName, result_str)
+    print('accuracy =', accuracy)
+    for eval_class in word_length_model.classes:
+        if eval_class == 'ham':
+            opp_class = 'spam'
+        else:
+            opp_class = 'ham'
+        precision, recall = word_length_model.precision_recall(dirName, result_str, eval_class, opp_class)
+        print(eval_class, 'precision =', precision, 'recall = ', recall)
+        beta = 1
+        f1_measure = word_length_model.f_measure(precision, recall, beta)
+        print(eval_class, 'f1_measure =', f1_measure)
 
 
 def experiment_4():
@@ -788,15 +880,15 @@ def experiment_5():
 
 def main():
 
-    base_experiment()
+    # base_experiment()
     
     experiment_2()
-    
+    #
     experiment_3()
+    #
+    # experiment_4()
 
-    experiment_4()
-
-    experiment_5()
+    # experiment_5()
 
 
 
